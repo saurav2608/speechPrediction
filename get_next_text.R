@@ -1,5 +1,5 @@
 
-get_next_text <- function(input_text){
+get_next_text <- function(input_text, diversity = 1){
   model <- load_model_hdf5('input/full_model_nietzche.h5')
   #pad left to make 40 character
   sentence <- str_pad(string = input_text, width = 40, side = "left")
