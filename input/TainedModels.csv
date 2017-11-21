@@ -1,0 +1,3 @@
+Names,Model,Chars
+Donald Trump,trump_38,trump_chars.rds
+Friedrich Nietzsche,full_model_nietzche.h5,trump_chars.rds

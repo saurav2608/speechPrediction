@@ -6,6 +6,7 @@ library(readr)
 library(purrr)
 library(tokenizers)
 
+source('get_trained_models.R')
 
 # Define UI for application 
 ui <- fluidPage(
@@ -22,8 +23,16 @@ ui <- fluidPage(
                                                         min = .2, max = 1.5, value = 1)
                                ),
                                mainPanel(
-                                 fluidRow(textInput("init_text", 
-                                                    "Leading text to generate output (upto 40 characters, more text is better)")),
+                                 fluidRow(
+                                   "Leading text to generate output (upto 40 characters, more text is better)",
+                                   column(6,
+                                          textInput("init_text",
+                                                    "")
+                                          ),
+                                   column(2,
+                                          actionButton("generate", "Generate Text")
+                                          )
+                                   ),
                                  fluidRow(verbatimTextOutput("next_text"))
                                  
                                )
@@ -41,6 +50,7 @@ ui <- fluidPage(
                           column(
                             8,
                             tags$h3("LSTM will be trained with predefined architecture. To modify the architecture please fork"),
+                            pre(id = "console"),
                             textOutput("model_architecture")
                           )
                         )
@@ -50,25 +60,29 @@ ui <- fluidPage(
 )
 
 server <- function(input, output) {
-  speaker <- c("Friedrich Nietzsche","Donald Trump")
+  trained_models <- get_trained_models()
+  speaker <- as.character(trained_models[,1])
   output$choose_speaker <- renderUI({
     selectInput("speaker", "Speaker ", speaker)
   })
-  source('get_next_text.R')
-  output$next_text <- renderText(get_next_text(input$init_text, input$diversity))
   
+  observeEvent(input$generate, {
+    source('get_next_text.R')
+    output$next_text <- renderText(
+      get_next_text(input$speaker, input$init_text, input$diversity, trained_models)
+    )
+  })
+  
+  
+  
+
   observeEvent(input$setup_training, {
-    # run only when setup is clicked
+    # run only when action button is on. 
 
     source('training.R')
-    
-    withCallingHandlers(
-      training_setup(input$file1$datapath),
-      message = function(m) output$model_architecture <- renderPrint(m$message)
-    )
+    training_setup(input$file1$datapath)
+    })
 
-
-  })
 
 }
 
