@@ -1,5 +1,5 @@
 
-get_next_text <- function(speaker, input_text, diversity = 1, models){
+get_next_text <- function( speaker, input_text, diversity = 1, models){
   
   # Helper functions & Results ----------------------------------------------------
   
@@ -19,7 +19,10 @@ get_next_text <- function(speaker, input_text, diversity = 1, models){
   model <- load_model_hdf5(paste0('input/',trained_model_file))
   chars_file <- as.character(models[which(models[,1] == speaker),][,3])
   chars <- readRDS(paste0('input/', chars_file))
-  #pad left to make 40 character
+  #truncate of pad left to make 40 character
+  if(str_length(sentence)>40){
+    sentence <- str_sub(sentence, end = -40)
+  }
   sentence <- str_pad(string = input_text, width = 40, side = "left") %>% 
     tokenize_characters(strip_non_alphanum = FALSE, simplify = TRUE)
   generated <- ""

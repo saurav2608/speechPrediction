@@ -24,17 +24,33 @@ ui <- fluidPage(
                                ),
                                mainPanel(
                                  fluidRow(
-                                   "Leading text to generate output (upto 40 characters, more text is better)",
-                                   column(6,
+                                   tags$h3(
+                                     "Leading text to generate output"
+                                     ),
+                                   column(9,
                                           textInput("init_text",
-                                                    "")
+                                                    "",
+                                                    placeholder = "upto 40 characters")
                                           ),
                                    column(2,
+                                          tags$br(),
                                           actionButton("generate", "Generate Text")
                                           )
                                    ),
-                                 fluidRow(verbatimTextOutput("next_text"))
-                                 
+                                 fluidRow(
+                                   column(9,
+                                          #verbatimTextOutput("next_text", placeholder = TRUE)
+                                          tags$h4(paste("Thus spake ...")),
+                                          textOutput("next_text")
+                                   ),
+                                   column(2,
+                                          actionButton("listen", "", icon = icon("music"))
+                                   )
+                                 ),
+                                 fluidRow(
+                                   renderUI("audiotag")
+                                 )
+
                                )
                       ),
                       tabPanel(
@@ -60,6 +76,7 @@ ui <- fluidPage(
 )
 
 server <- function(input, output) {
+  txt <- ""
   trained_models <- get_trained_models()
   speaker <- as.character(trained_models[,1])
   output$choose_speaker <- renderUI({
@@ -68,14 +85,32 @@ server <- function(input, output) {
   
   observeEvent(input$generate, {
     source('get_next_text.R')
-    output$next_text <- renderText(
-      get_next_text(input$speaker, input$init_text, input$diversity, trained_models)
-    )
+    # Create a Progress object
+
+    updateProgress <- function(value = NULL, detail = NULL) {
+      if (is.null(value)) {
+        value <- progress$getValue()
+        value <- value + (progress$getMax() - value) / 5
+      }
+      progress$set(value = value, detail = detail)
+    }
+    output$next_text <- renderText({
+      progress <- shiny::Progress$new()
+      progress$set(message = "Computing Predictive Text", value = .5)
+      # Close the progress when this reactive exits (even if there's an error)
+      on.exit(progress$close())
+      updateProgress <- function(value = NULL, detail = NULL) {
+        if (is.null(value)) {
+          value <- progress$getValue()
+          value <- value + (progress$getMax() - value) / 5
+        }
+        progress$set(value = value, detail = detail)
+      }
+      txt <<- get_next_text(input$speaker, input$init_text, input$diversity, trained_models)
+    }) 
+
   })
   
-  
-  
-
   observeEvent(input$setup_training, {
     # run only when action button is on. 
 
@@ -83,7 +118,12 @@ server <- function(input, output) {
     training_setup(input$file1$datapath)
     })
 
-
+  observeEvent(input$listen, {
+    #print(txt)
+    tts_ITRI(content = txt, speaker = "ENG_Bob", destfile = 'www/audio.wav')
+    output$audiotag <- renderUI(tags$audio(src = 'audio.wav', type ="audio/wav",  
+                                           autoplay = NA, controls = NA))
+  })
 }
 
 # Run the application 
