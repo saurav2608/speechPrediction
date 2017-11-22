@@ -6,10 +6,13 @@ library(readr)
 library(purrr)
 library(tokenizers)
 library(shinyjs)
+library(Rtts)
 source('get_trained_models.R')
+source('get_next_text.R')
 
 # Define UI for application 
 ui <- fluidPage(
+  
   theme = shinythemes::shinytheme("cosmo"),
   img(src='speech.jpeg', align = "center", width="100%"),
   
@@ -87,9 +90,9 @@ server <- function(input, output) {
   })
   
   observeEvent(input$generate, {
-    source('get_next_text.R')
+    shinyjs::hide("audiotag")
     # Create a Progress object
-
+    shinyjs::hide("listen")
     updateProgress <- function(value = NULL, detail = NULL) {
       if (is.null(value)) {
         value <- progress$getValue()
@@ -109,7 +112,10 @@ server <- function(input, output) {
         }
         progress$set(value = value, detail = detail)
       }
-      txt <<- get_next_text(input$speaker, input$init_text, input$diversity, trained_models)
+      isolate(
+        txt <<- get_next_text(input$speaker, input$init_text, input$diversity, trained_models)
+      )
+      
     })
     shinyjs::show("listen")
 
@@ -123,10 +129,11 @@ server <- function(input, output) {
     })
 
   observeEvent(input$listen, {
-    #print(txt)
+    shinyjs::hide("audiotag")
     Rtts::tts_ITRI(txt, speaker = "Bruce", destfile = 'www/audio.wav')
-    output$audiotag <- renderUI(tags$audio(src = 'audio.wav', type ="audio/wav",  
+    output$audiotag <- renderUI(tags$audio(src = 'audio.wav', type ="audio/wav",
                                            autoplay = TRUE, controls = NA))
+    shinyjs::show("audiotag")
   })
 }
 

@@ -1,0 +1,12 @@
+name: SpeechPrediction
+title: SpeechPrediction
+username:
+account: csaurav
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 238896
+bundleId: 1090418
+url: https://csaurav.shinyapps.io/SpeechPrediction/
+when: 1511362469.60414
+asMultiple: FALSE
+asStatic: FALSE
