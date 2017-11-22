@@ -5,7 +5,7 @@ library(stringr)
 library(readr)
 library(purrr)
 library(tokenizers)
-
+library(shinyjs)
 source('get_trained_models.R')
 
 # Define UI for application 
@@ -17,10 +17,11 @@ ui <- fluidPage(
    #titlePanel("Just a Minute"),
    shinyUI(navbarPage("Just a Minute",
                       tabPanel("Predict Speech",
+                               useShinyjs(),
                                sidebarPanel(
                                  uiOutput("choose_speaker"),
                                  sliderInput("diversity", "Diversity",
-                                                        min = .2, max = 1.5, value = 1)
+                                                        min = .2, max = 1.5, value = .2)
                                ),
                                mainPanel(
                                  fluidRow(
@@ -44,11 +45,13 @@ ui <- fluidPage(
                                           textOutput("next_text")
                                    ),
                                    column(2,
+                                          shinyjs::hidden(
                                           actionButton("listen", "", icon = icon("music"))
+                                          )
                                    )
                                  ),
                                  fluidRow(
-                                   renderUI("audiotag")
+                                   uiOutput("audiotag")
                                  )
 
                                )
@@ -107,7 +110,8 @@ server <- function(input, output) {
         progress$set(value = value, detail = detail)
       }
       txt <<- get_next_text(input$speaker, input$init_text, input$diversity, trained_models)
-    }) 
+    })
+    shinyjs::show("listen")
 
   })
   
@@ -120,9 +124,9 @@ server <- function(input, output) {
 
   observeEvent(input$listen, {
     #print(txt)
-    tts_ITRI(content = txt, speaker = "ENG_Bob", destfile = 'www/audio.wav')
+    Rtts::tts_ITRI(txt, speaker = "Bruce", destfile = 'www/audio.wav')
     output$audiotag <- renderUI(tags$audio(src = 'audio.wav', type ="audio/wav",  
-                                           autoplay = NA, controls = NA))
+                                           autoplay = TRUE, controls = NA))
   })
 }
 

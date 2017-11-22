@@ -12,7 +12,7 @@ get_next_text <- function( speaker, input_text, diversity = 1, models){
       as.integer() %>%
       which.max()
   }
-  
+  sentence <- input_text
   
   #get the file path for the saves model file
   trained_model_file <- as.character(models[which(models[,1] == speaker),][,2])
