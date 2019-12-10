@@ -2,6 +2,7 @@
 get_next_text <- function( speaker, input_text, diversity = 1, models){
   
   # Helper functions & Results ----------------------------------------------------
+
   
   sample_mod <- function(preds, temperature = 1){
     preds <- log(preds)/temperature
